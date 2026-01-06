@@ -1,21 +1,16 @@
 /**
- * LangChain Prompt Templates & AI Chains
+ * AI Analysis Chains for GitHub Vibe Check
  *
- * Why: We use LangChain to structure our prompts and make them reusable.
- * This separates the AI logic from the API routes, making it easier to test and iterate.
- *
- * Gotcha: OpenRouter requires specific headers and model names. We use Gemini Flash
- * for speed and cost-effectiveness, but you can swap to GPT-4 for better quality.
+ * We analyze:
+ * 1. Commit messages → Developer personality & habits
+ * 2. README content → Communication style & project approach
+ * 3. Profile stats → Activity level & community engagement
  */
 
 import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 
-/**
- * Initialize the LLM with OpenRouter
- * OpenRouter acts as a proxy to multiple AI providers (OpenAI, Anthropic, Google, etc.)
- */
 function getLLM() {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
@@ -27,59 +22,73 @@ function getLLM() {
   }
 
   return new ChatOpenAI({
-    modelName: 'openai/gpt-4o-mini', // Extremely fast, cheap, and smart for style analysis
-    temperature: 0.7, // Balance between creativity and consistency
+    modelName: 'x-ai/grok-4.1-fast',
+    temperature: 0.8, // Higher creativity for personality analysis
     apiKey: apiKey,
     configuration: {
       baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: {
         'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-        'X-Title': 'EchoWrite',
+        'X-Title': 'GitHub Vibe Check',
       },
     },
   });
 }
 
-/**
- * Style Analysis Chain
- * Analyzes a user's writing style from their LinkedIn posts
- */
-export interface WritingStyle {
-  tone: string;
-  style: string;
-  keywords: string[];
-  formatting: string;
-  signature_phrases: string[];
+export interface DeveloperVibe {
+  archetype: string; // "The Chaotic Refactorer", "The Documentation Monk", etc.
+  personality: string; // Short description
+  strengths: string[];
+  quirks: string[];
+  roast: string; // Funny but accurate roast
+  commitStyle: string;
 }
 
-const STYLE_ANALYZER_PROMPT = `You are an expert writing analyst. Analyze the following LinkedIn posts and extract the author's unique writing style.
+const VIBE_ANALYZER_PROMPT = `You are a witty developer psychologist. Analyze this GitHub user's coding personality based on their commits and README content.
 
-Posts:
-{posts}
+COMMIT MESSAGES:
+{commits}
+
+README SAMPLES:
+{readmes}
+
+PROFILE STATS:
+- Public Repos: {repos}
+- Followers: {followers}
 
 Analyze and return a JSON object with the following structure (ONLY return valid JSON, no markdown, no explanation):
 {{
-  "tone": "A 2-3 word description of the overall tone (e.g., 'Inspirational & Tech-focused', 'Professional & Data-driven')",
-  "style": "A short sentence describing the writing style (e.g., 'Short, punchy sentences with strategic line breaks', 'Long-form storytelling with personal anecdotes')",
-  "keywords": ["array", "of", "5-7", "most", "common", "topics"],
-  "formatting": "Description of formatting quirks (e.g., 'Uses emojis sparingly', 'Bullet points for lists', 'Single-line paragraphs')",
-  "signature_phrases": ["array", "of", "2-3", "unique", "phrases", "this", "person", "uses"]
+  "archetype": "A creative 2-4 word title like 'The Chaotic Refactorer' or 'The Documentation Monk'",
+  "personality": "A punchy 1-2 sentence description of their coding personality",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "quirks": ["quirk 1", "quirk 2"],
+  "roast": "A funny but accurate one-liner roast about their coding habits (keep it playful, not mean)",
+  "commitStyle": "Description of their commit message style in 1 sentence"
 }}
 
-Return ONLY the JSON object, nothing else.`;
+Make it entertaining, accurate, and shareable. Think of this as their "developer horoscope".`;
 
-export async function analyzeWritingStyle(posts: string[]): Promise<WritingStyle> {
+export async function analyzeGitHubVibe(
+  commits: string[],
+  readmes: string[],
+  repos: number,
+  followers: number
+): Promise<DeveloperVibe> {
   const llm = getLLM();
-
-  const prompt = PromptTemplate.fromTemplate(STYLE_ANALYZER_PROMPT);
+  const prompt = PromptTemplate.fromTemplate(VIBE_ANALYZER_PROMPT);
   const chain = prompt.pipe(llm).pipe(new StringOutputParser());
 
-  const postsText = posts.map((post, i) => `Post ${i + 1}:\n${post}`).join('\n\n---\n\n');
+  const commitsText = commits.map((c, i) => `${i + 1}. ${c}`).join('\n');
+  const readmesText = readmes.join('\n\n---\n\n');
 
   try {
-    const result = await chain.invoke({ posts: postsText });
+    const result = await chain.invoke({
+      commits: commitsText,
+      readmes: readmesText,
+      repos: repos.toString(),
+      followers: followers.toString(),
+    });
 
-    // Clean up the response (remove markdown code blocks if present)
     const cleanedResult = result
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -87,92 +96,76 @@ export async function analyzeWritingStyle(posts: string[]): Promise<WritingStyle
 
     const parsed = JSON.parse(cleanedResult);
 
-    // Validate the structure
-    if (!parsed.tone || !parsed.style || !Array.isArray(parsed.keywords)) {
+    if (!parsed.archetype || !parsed.personality) {
       throw new Error('Invalid response structure from LLM');
     }
 
-    return parsed as WritingStyle;
+    return parsed as DeveloperVibe;
   } catch (error) {
-    console.error('Error analyzing writing style:', error);
+    console.error('Error analyzing GitHub vibe:', error);
 
-    // Return a fallback style if parsing fails
+    // Fallback vibe
     return {
-      tone: 'Professional & Engaging',
-      style: 'Clear and concise with a focus on actionable insights',
-      keywords: ['technology', 'innovation', 'growth', 'strategy', 'leadership'],
-      formatting: 'Clean paragraphs with occasional bullet points',
-      signature_phrases: ["Let's dive in", "Here's the thing", 'Bottom line'],
+      archetype: 'The Mysterious Coder',
+      personality:
+        'A developer shrouded in mystery, leaving breadcrumbs of brilliance across the codebase.',
+      strengths: ['Problem solving', 'Persistence', 'Adaptability'],
+      quirks: ['Commits at 3 AM', 'Loves refactoring'],
+      roast: 'Your commit messages are like fortune cookies—vague but oddly inspiring.',
+      commitStyle: 'Concise and to the point, like a developer haiku.',
     };
   }
 }
 
 /**
- * Post Generation Chain
- * Generates new LinkedIn posts based on the analyzed writing style
+ * Generate Sample Code in User's Style
+ * (Future feature: Generate code snippets that match their style)
  */
-const POST_GENERATOR_PROMPT = `You are a LinkedIn ghostwriter. Generate a new LinkedIn post that mimics the following writing style EXACTLY.
+const CODE_GENERATOR_PROMPT = `You are a code generator that mimics a developer's style.
 
-Writing Style Profile:
-- Tone: {tone}
-- Style: {style}
-- Common Keywords: {keywords}
-- Formatting: {formatting}
-- Signature Phrases: {signature_phrases}
+Based on this developer's vibe:
+- Archetype: {archetype}
+- Commit Style: {commitStyle}
+- Quirks: {quirks}
 
-Topic: {topic}
+Generate a short, funny code snippet (10-15 lines) that this developer would write.
+Include a commit message they would use for this code.
 
-Instructions:
-1. Write a LinkedIn post about the given topic
-2. Match the tone, style, and formatting EXACTLY
-3. Use similar keywords and phrases naturally
-4. Keep it authentic and engaging
-5. Length should be 100-250 words
-6. Do NOT use hashtags unless the original style uses them heavily
+Return ONLY valid JSON:
+{{
+  "code": "the code snippet as a string with \\n for newlines",
+  "language": "javascript/python/etc",
+  "commitMessage": "the commit message they'd write"
+}}`;
 
-Return ONLY the post text, no explanations or meta-commentary.`;
-
-export async function generatePost(style: WritingStyle, topic: string): Promise<string> {
+export async function generateCodeSample(vibe: DeveloperVibe): Promise<{
+  code: string;
+  language: string;
+  commitMessage: string;
+}> {
   const llm = getLLM();
-
-  const prompt = PromptTemplate.fromTemplate(POST_GENERATOR_PROMPT);
+  const prompt = PromptTemplate.fromTemplate(CODE_GENERATOR_PROMPT);
   const chain = prompt.pipe(llm).pipe(new StringOutputParser());
 
   try {
     const result = await chain.invoke({
-      tone: style.tone,
-      style: style.style,
-      keywords: style.keywords.join(', '),
-      formatting: style.formatting,
-      signature_phrases: style.signature_phrases.join(', '),
-      topic,
+      archetype: vibe.archetype,
+      commitStyle: vibe.commitStyle,
+      quirks: vibe.quirks.join(', '),
     });
 
-    return result.trim();
+    const cleanedResult = result
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    return JSON.parse(cleanedResult);
   } catch (error) {
-    console.error('Error generating post:', error);
-    throw new Error('Failed to generate post. Please try again.');
+    console.error('Error generating code sample:', error);
+    return {
+      code: '// TODO: Write actual code\nconsole.log("Hello, World!");',
+      language: 'javascript',
+      commitMessage: 'feat: add hello world (revolutionary)',
+    };
   }
 }
-
-/**
- * Generate multiple post variations
- */
-export async function generateMultiplePosts(
-  style: WritingStyle,
-  topics: string[]
-): Promise<string[]> {
-  // Generate posts in parallel for speed
-  const promises = topics.map((topic) => generatePost(style, topic));
-  return Promise.all(promises);
-}
-
-/**
- * Default topics for post generation
- * These are generic enough to work for most LinkedIn users
- */
-export const DEFAULT_TOPICS = [
-  'The future of remote work and hybrid teams',
-  'A lesson you learned from a recent failure',
-  'Why continuous learning is crucial in your industry',
-];

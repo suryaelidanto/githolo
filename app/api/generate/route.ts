@@ -1,97 +1,81 @@
 /**
- * POST /api/generate
- *
- * Main API endpoint for EchoWrite
- * Handles the entire flow: scraping → analysis → generation
- *
- * Why a single endpoint: Simplifies the frontend and reduces round trips.
- * The entire process takes 10-15 seconds, which is acceptable for an MVP.
- *
- * For scale: Consider splitting into separate endpoints and using a job queue.
+ * POST /api/generate - GitHub Vibe Check Edition
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { scrapeLinkedInProfile, getMockLinkedInPosts } from '@/lib/scraper';
-import { analyzeWritingStyle, generateMultiplePosts, DEFAULT_TOPICS } from '@/lib/chains';
+import { scrapeGitHubProfile, getMockGitHubData } from '@/lib/scraper';
+import { analyzeGitHubVibe, generateCodeSample } from '@/lib/chains';
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
-// Input validation schema
 const GenerateRequestSchema = z.object({
-  profileUrl: z.string().url('Invalid URL format'),
-  useMockData: z.boolean().optional().default(false), // For development/testing
+  username: z.string().min(1, 'Username is required'),
+  useMockData: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Parse and validate request body
     const body = await request.json();
     const validation = GenerateRequestSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid request: ' + validation.error.issues[0].message,
-        },
+        { success: false, error: 'Invalid username provided.' },
         { status: 400 }
       );
     }
 
-    const { profileUrl, useMockData } = validation.data;
+    const { username, useMockData } = validation.data;
 
-    // 2. Check rate limit
+    // Rate Limit Check
     const clientIp = getClientIp(request);
     const rateLimitResult = await checkRateLimit(clientIp);
 
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: rateLimitResult.error,
-          rateLimit: {
-            limit: rateLimitResult.limit,
-            remaining: rateLimitResult.remaining,
-            reset: rateLimitResult.reset,
-          },
-        },
-        { status: 429 }
-      );
+      return NextResponse.json({ success: false, error: rateLimitResult.error }, { status: 429 });
     }
 
-    // 3. Scrape LinkedIn profile (or use mock data)
-    const scrapeResult = useMockData
-      ? getMockLinkedInPosts()
-      : await scrapeLinkedInProfile(profileUrl, 5);
+    // Fetch GitHub Data
+    const scrapeResult = useMockData ? getMockGitHubData() : await scrapeGitHubProfile(username);
 
-    if (!scrapeResult.success || scrapeResult.posts.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: scrapeResult.error || 'No posts found on this profile',
-        },
-        { status: 400 }
-      );
+    if (!scrapeResult.success) {
+      return NextResponse.json({ success: false, error: scrapeResult.error }, { status: 400 });
     }
 
-    // 4. Analyze writing style
-    const posts = scrapeResult.posts.map((p) => p.text);
-    const writingStyle = await analyzeWritingStyle(posts);
+    const { profile, commits, readmes } = scrapeResult;
 
-    // 5. Generate new posts
-    const generatedPosts = await generateMultiplePosts(writingStyle, DEFAULT_TOPICS);
+    // AI Analysis
+    const commitMessages = commits!.map((c) => c.message);
+    const vibe = await analyzeGitHubVibe(
+      commitMessages,
+      readmes || [],
+      profile!.public_repos,
+      profile!.followers
+    );
 
-    // 6. Return success response
+    // Generate Code Sample (for shareability)
+    const codeSample = await generateCodeSample(vibe);
+
     return NextResponse.json({
       success: true,
       data: {
-        writingStyle,
-        generatedPosts: generatedPosts.map((post, index) => ({
-          id: index + 1,
-          topic: DEFAULT_TOPICS[index],
-          content: post,
+        profile: {
+          username: profile!.username,
+          name: profile!.name,
+          bio: profile!.bio,
+          avatar: profile!.avatar_url,
+          stats: {
+            repos: profile!.public_repos,
+            followers: profile!.followers,
+            following: profile!.following,
+          },
+        },
+        vibe,
+        codeSample,
+        sampleCommits: commits!.slice(0, 5).map((c) => ({
+          message: c.message,
+          repo: c.repo,
         })),
-        originalPosts: posts, // Include for transparency
       },
       rateLimit: {
         limit: rateLimitResult.limit,
@@ -101,28 +85,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Generation error:', error);
-
-    // Don't expose internal errors to users
     return NextResponse.json(
-      {
-        success: false,
-        error: 'An unexpected error occurred. Please try again later.',
-      },
+      { success: false, error: 'Server error. Please try again.' },
       { status: 500 }
     );
   }
-}
-
-// Handle OPTIONS for CORS (if needed)
-export async function OPTIONS() {
-  return NextResponse.json(
-    {},
-    {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    }
-  );
 }

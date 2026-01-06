@@ -9,38 +9,38 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: 'EchoWrite - Find Your AI Voice',
+  title: 'GitHub Vibe Check - Discover Your Developer Personality',
   description:
-    'Discover your unique LinkedIn writing style and let AI generate posts that sound exactly like you. Free, no login required.',
+    'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype, strengths, quirks, and a personalized roast.',
   keywords: [
-    'LinkedIn',
-    'AI writing',
-    'content generation',
-    'writing style',
-    'social media',
-    'LangChain',
+    'GitHub',
+    'developer personality',
+    'AI analysis',
+    'coding style',
+    'commit messages',
+    'developer archetype',
   ],
-  authors: [{ name: 'EchoWrite Team' }],
+  authors: [{ name: 'GitHub Vibe Check' }],
   openGraph: {
-    title: 'EchoWrite - Find Your AI Voice',
+    title: 'GitHub Vibe Check - Discover Your Developer Personality',
     description:
-      'Discover your unique LinkedIn writing style and let AI generate posts that sound exactly like you.',
+      'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype and personalized insights.',
     type: 'website',
-    url: 'https://echowrite.ai',
+    url: 'https://github-vibe-check.vercel.app',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'EchoWrite - AI-powered LinkedIn writing assistant',
+        alt: 'GitHub Vibe Check - AI-powered developer personality analysis',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'EchoWrite - Find Your AI Voice',
+    title: 'GitHub Vibe Check - Discover Your Developer Personality',
     description:
-      'Discover your unique LinkedIn writing style and let AI generate posts that sound exactly like you.',
+      'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype and personalized insights.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -56,7 +56,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} font-sans antialiased text-black`}>{children}</body>
+      <body
+        className={`${outfit.variable} font-sans antialiased text-black`}
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
     </html>
   );
 }

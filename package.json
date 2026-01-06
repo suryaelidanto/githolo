@@ -1,20 +1,21 @@
 {
-  "name": "echowrite",
+  "name": "github-vibe-check",
   "version": "1.0.0",
-  "description": "Find your AI voice. Analyze LinkedIn writing style and generate posts that sound like you.",
-  "author": "EchoWrite Team",
+  "description": "AI-powered developer personality analysis. Discover your coding archetype based on your GitHub commits.",
+  "author": "GitHub Vibe Check",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/echowrite.git"
+    "url": "https://github.com/yourusername/github-vibe-check.git"
   },
   "keywords": [
-    "linkedin",
+    "github",
+    "developer",
     "ai",
-    "writing",
+    "personality",
+    "commits",
     "langchain",
-    "nextjs",
-    "content-generation"
+    "nextjs"
   ],
   "private": false,
   "scripts": {
@@ -37,6 +38,7 @@
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "https-proxy-agent": "^7.0.6",
     "langchain": "^1.2.4",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",

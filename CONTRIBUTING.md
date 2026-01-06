@@ -3,8 +3,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/yourusername/echowrite.git
-cd echowrite
+git clone https://github.com/yourusername/github-vibe-check.git
+cd github-vibe-check
 npm install
 cp .env.example .env.local
 # Add your API keys

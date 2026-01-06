@@ -1,23 +1,25 @@
-# EchoWrite
+# GitHub Vibe Check
 
-Find your AI voice. Analyze LinkedIn writing style and generate posts that sound like you.
+AI-powered developer personality analysis. Discover your coding archetype based on your GitHub commits.
 
 ## Features
 
-- Analyzes your last 5 LinkedIn posts
-- Extracts your unique writing style
-- Generates 3 new posts matching your tone
+- Analyzes your recent GitHub commits
+- Extracts your developer personality & coding style
+- Generates your unique "Developer Archetype"
+- Provides personalized roast & insights
 - No login required
 - Rate limited (3 per 24h)
-- Dark mode UI with animations
+- Bold Pitch.com-inspired UI
 
 ## Tech Stack
 
 - Next.js 16 (App Router)
 - TypeScript
-- LangChain + OpenRouter
-- Upstash Redis
-- Tailwind + Shadcn/UI
+- LangChain + OpenRouter (GPT-4o-mini)
+- GitHub API
+- Upstash Redis (rate limiting)
+- Tailwind CSS v4
 
 ## Quick Start
 
@@ -32,6 +34,7 @@ Get API keys:
 
 - OpenRouter: https://openrouter.ai/keys
 - Upstash: https://upstash.com
+- GitHub Token (optional): https://github.com/settings/tokens
 
 ## Documentation
 
