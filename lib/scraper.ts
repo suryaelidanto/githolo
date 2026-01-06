@@ -25,11 +25,20 @@ export interface GitHubCommit {
   repo: string;
 }
 
+export interface RepoDetail {
+  name: string;
+  description: string;
+  languages: string[];
+  topics: string[];
+  structure: string[]; // Root-level folders/files
+}
+
 export interface ScrapeResult {
   success: boolean;
   profile?: GitHubProfile;
   commits?: GitHubCommit[];
   readmes?: string[];
+  repoDetails?: RepoDetail[]; // Deep technical context
   error?: string;
   isMock?: boolean;
 }
@@ -49,7 +58,17 @@ async function fetchGitHubProfile(username: string): Promise<GitHubProfile> {
   }
 
   const response = await axios.get(`https://api.github.com/users/${username}`, { headers });
-  return response.data;
+  const data = response.data;
+
+  return {
+    username: data.login,
+    name: data.name || data.login,
+    bio: data.bio || '',
+    public_repos: data.public_repos,
+    followers: data.followers,
+    following: data.following,
+    avatar_url: data.avatar_url,
+  };
 }
 
 /**
@@ -157,6 +176,58 @@ async function fetchTopReadmes(username: string, limit: number = 3): Promise<str
 }
 
 /**
+ * Fetch technical details for top repos
+ */
+async function fetchRepoDetails(username: string, limit: number = 3): Promise<RepoDetail[]> {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHubVibeCheck',
+  };
+
+  if (token) {
+    headers['Authorization'] = `token ${token}`;
+  }
+
+  // Get user's repos sorted by stars/impact
+  const reposResponse = await axios.get(
+    `https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`,
+    { headers }
+  );
+
+  const details: RepoDetail[] = [];
+
+  for (const repo of reposResponse.data) {
+    try {
+      // 1. Fetch Languages
+      const langResp = await axios.get(repo.languages_url, { headers });
+      const languages = Object.keys(langResp.data).slice(0, 3); // Top 3 languages
+
+      // 2. Fetch Root Structure
+      const contentResp = await axios.get(
+        `https://api.github.com/repos/${username}/${repo.name}/contents`,
+        { headers }
+      );
+      const structure = contentResp.data.map((f: { name: string; type: string }) =>
+        f.type === 'dir' ? `/${f.name}` : f.name
+      ); // Full root tree
+
+      details.push({
+        name: repo.name,
+        description: repo.description || '',
+        languages,
+        topics: repo.topics || [],
+        structure,
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  return details;
+}
+
+/**
  * Main Scraper Function
  */
 export async function scrapeGitHubProfile(username: string): Promise<ScrapeResult> {
@@ -171,26 +242,17 @@ export async function scrapeGitHubProfile(username: string): Promise<ScrapeResul
     // Fetch profile first (this is critical)
     const profile = await fetchGitHubProfile(username);
 
-    // Fetch commits and readmes separately (non-blocking)
-    let commits: GitHubCommit[] = [];
-    let readmes: string[] = [];
+    // Run secondary fetches in parallel
+    const [commits, readmes, repoDetails] = await Promise.all([
+      fetchRecentCommits(username, 20).catch(() => []),
+      fetchTopReadmes(username, 3).catch(() => []),
+      fetchRepoDetails(username, 3).catch(() => []),
+    ]);
 
-    try {
-      commits = await fetchRecentCommits(username, 20);
-    } catch (_error) {
-      console.warn('Failed to fetch commits:', _error);
-    }
-
-    try {
-      readmes = await fetchTopReadmes(username, 3);
-    } catch (_error) {
-      console.warn('Failed to fetch readmes:', _error);
-    }
-
-    if (commits.length === 0) {
+    if (commits.length === 0 && repoDetails.length === 0) {
       return {
         success: false,
-        error: 'No recent commits found. This user might be inactive or have private repos only.',
+        error: 'No public activity found for this user.',
       };
     }
 
@@ -199,6 +261,7 @@ export async function scrapeGitHubProfile(username: string): Promise<ScrapeResul
       profile,
       commits,
       readmes,
+      repoDetails,
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -269,6 +332,15 @@ export function getMockGitHubData(): ScrapeResult {
     readmes: [
       '# Awesome Project\n\nThis is a revolutionary tool that does something amazing. Built with love and caffeine.',
       '# Cool App\n\nA minimalist approach to solving complex problems. No bloat, just results.',
+    ],
+    repoDetails: [
+      {
+        name: 'awesome-project',
+        description: 'A revolutionary tool',
+        languages: ['TypeScript', 'CSS'],
+        topics: ['ai', 'nextjs'],
+        structure: ['/app', '/components', '/lib', 'package.json', 'README.md'],
+      },
     ],
   };
 }

@@ -10,6 +10,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { RepoDetail } from './scraper';
 
 function getLLM() {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -44,7 +45,10 @@ export interface DeveloperVibe {
   commitStyle: string;
 }
 
-const VIBE_ANALYZER_PROMPT = `You are a witty developer psychologist. Analyze this GitHub user's coding personality based on their commits and README content.
+const VIBE_ANALYZER_PROMPT = `You are a witty developer psychologist. Analyze this GitHub user's coding personality.
+
+TECHNICAL CONTEXT (TOP REPOS):
+{repoContext}
 
 COMMIT MESSAGES:
 {commits}
@@ -66,13 +70,18 @@ Analyze and return a JSON object with the following structure (ONLY return valid
   "commitStyle": "Description of their commit message style in 1 sentence"
 }}
 
-Make it entertaining, accurate, and shareable. Think of this as their "developer horoscope".`;
+Instruction for analysis:
+- Analyze the Technical Skeleton (Repo Structure): Look for professional patterns like containerization (Docker), strict linting (.eslintrc), automated pipelines (.github), or complex monorepo setups. If you see messy root directories with log files or temp files, call it out.
+- Synthesize Stack + Niche: Use Languages & Topics to determine if they are deep-tech specialists (LLMs, Compilers) or product-focused (Web, Mobile).
+- Connect the Dots with Commits: Do their professional-looking folders match their commit energy? Or is it "organized chaos"?
+- Make it entertaining, accurate, and shareable. Tone: Witty, slightly judgmental (it's a "roast" partly), but technically sophisticated.`;
 
 export async function analyzeGitHubVibe(
   commits: string[],
   readmes: string[],
   repos: number,
-  followers: number
+  followers: number,
+  repoDetails: RepoDetail[] = []
 ): Promise<DeveloperVibe> {
   const llm = getLLM();
   const prompt = PromptTemplate.fromTemplate(VIBE_ANALYZER_PROMPT);
@@ -80,9 +89,16 @@ export async function analyzeGitHubVibe(
 
   const commitsText = commits.map((c, i) => `${i + 1}. ${c}`).join('\n');
   const readmesText = readmes.join('\n\n---\n\n');
+  const repoContextText = repoDetails
+    .map(
+      (r) =>
+        `Repo: ${r.name}\n- Desc: ${r.description}\n- Tech: ${r.languages.join(', ')}\n- Topics: ${r.topics.join(', ')}\n- Files: ${r.structure.join(', ')}`
+    )
+    .join('\n\n');
 
   try {
     const result = await chain.invoke({
+      repoContext: repoContextText,
       commits: commitsText,
       readmes: readmesText,
       repos: repos.toString(),

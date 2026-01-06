@@ -83,7 +83,7 @@ export default function Results() {
           <div className="flex items-center gap-4">
             <Image
               src={data.profile.avatar}
-              alt={data.profile.username}
+              alt={data.profile.username || data.profile.name || 'User Avatar'}
               width={80}
               height={80}
               className="rounded-full border-2 border-pitch-black"
@@ -93,7 +93,7 @@ export default function Results() {
               <h2 className="text-2xl font-black uppercase tracking-tighter">
                 {data.profile.name}
               </h2>
-              <p className="text-sm text-zinc-500">@{data.profile.username}</p>
+              <p className="text-sm text-zinc-500">@{data.profile.username || 'unknown'}</p>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ export default function Results() {
                 )}
               </button>
             </div>
-            <pre className="bg-pitch-black text-white p-4 rounded text-xs overflow-x-auto font-mono">
+            <pre className="bg-[#000000] text-white p-6 rounded-lg text-xs overflow-x-auto font-mono leading-relaxed min-h-[120px] shadow-2xl border border-white/10">
               <code>{data.codeSample.code}</code>
             </pre>
             <div className="mt-3 pt-3 border-t border-zinc-200">

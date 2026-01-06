@@ -114,6 +114,11 @@ body {
   box-shadow: 12px 12px 0px 0px var(--color-pitch-purple);
 }
 
+.pitch-code-block {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
 /* Base interactive elements */
 button,
 a {

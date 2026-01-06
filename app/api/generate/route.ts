@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: scrapeResult.error }, { status: 400 });
     }
 
-    const { profile, commits, readmes } = scrapeResult;
+    const { profile, commits, readmes, repoDetails } = scrapeResult;
 
     // AI Analysis
     const commitMessages = commits!.map((c) => c.message);
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
       commitMessages,
       readmes || [],
       profile!.public_repos,
-      profile!.followers
+      profile!.followers,
+      repoDetails || []
     );
 
     // Generate Code Sample (for shareability)
