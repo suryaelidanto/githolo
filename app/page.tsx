@@ -13,13 +13,40 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    let processedUsername = username.trim();
+    if (!processedUsername) {
+      setError('Please enter a username or profile URL.');
+      return;
+    }
+
+    // Handle full GitHub URLs
+    // e.g., https://github.com/suryaelidanto or github.com/suryaelidanto
+    try {
+      if (processedUsername.includes('github.com/')) {
+        const parts = processedUsername.split('github.com/');
+        processedUsername = parts[parts.length - 1].split('/')[0];
+      } else {
+        // Handle @username
+        processedUsername = processedUsername.replace('@', '').split('/')[0];
+      }
+    } catch {
+      setError('Invalid GitHub URL or username.');
+      return;
+    }
+
+    if (!processedUsername) {
+      setError('Could not extract a valid username.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.replace('@', '').trim() }),
+        body: JSON.stringify({ username: processedUsername }),
       });
 
       const data = await response.json();
@@ -38,100 +65,103 @@ export default function Home() {
     }
   };
 
-  return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-pitch-white">
-      {/* Top Section: Hero & Headline */}
-      <section className="flex-[1.2] flex flex-col items-center justify-center px-6 relative">
-        <header className="absolute top-0 left-0 right-0 p-6 md:p-8 flex justify-between items-center">
-          <div className="font-black text-xl md:text-2xl uppercase tracking-tighter flex items-center gap-2">
-            <Github className="w-6 h-6" />
-            Vibe Check
-          </div>
-        </header>
+  const handleDemo = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'demo', useMockData: true }),
+      });
+      const data = await response.json();
+      sessionStorage.setItem('vibecheck_results', JSON.stringify(data.data));
+      router.push('/results');
+    } catch {
+      setIsLoading(false);
+    }
+  };
 
-        <div className="pitch-container text-center space-y-2 md:space-y-4">
-          <h1 className="pitch-headline">
-            DISCOVER
-            <br />
-            YOUR <span className="text-pitch-purple">DEVELOPER</span> VIBE
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#F5F5F7]">
+      <div className="w-full max-w-2xl space-y-12 text-center">
+        {/* Header/Logo */}
+        <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+          <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-[#D2D2D7]">
+            <Github className="w-8 h-8 text-[#1D1D1F]" />
+          </div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#86868B]">
+            GitHub Vibe Check
+          </h2>
+        </div>
+
+        {/* Hero Section */}
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#1D1D1F] leading-[1.1]">
+            Discover your <br />
+            <span className="text-[#007AFF]">developer vibe</span>
           </h1>
-          <p className="text-base md:text-xl font-medium text-zinc-600 max-w-xl mx-auto leading-tight">
-            AI analyzes your GitHub commits and reveals your coding personality.
+          <p className="text-lg md:text-xl text-[#86868B] max-w-lg mx-auto leading-relaxed bento-body">
+            AI analysis of your coding personality and commit habits. Get your archetype, strengths,
+            and quirks in seconds.
           </p>
         </div>
-      </section>
 
-      {/* Bottom Section: Action & Form */}
-      <section className="flex-1 bg-pitch-green flex flex-col justify-center px-6 border-t-4 border-pitch-black relative">
-        <div className="max-w-3xl w-full mx-auto space-y-6">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
-          >
-            <div className="flex flex-col md:flex-row items-stretch">
+        <div className="w-full max-w-lg mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+          <form onSubmit={handleSubmit}>
+            <div className="bento-search-wrapper">
+              <div className="pl-4 text-[#86868B] flex-shrink-0">
+                <Github className="w-5 h-5 opacity-40" />
+              </div>
               <input
                 type="text"
-                placeholder="GITHUB USERNAME"
+                placeholder="username or github.com/username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
-                className="pitch-input flex-1 md:border-r-0"
+                className="bento-search-input"
                 required
               />
               <button
                 type="submit"
                 disabled={isLoading || !username}
-                className="pitch-button min-w-full md:min-w-[280px]"
+                className="bento-button h-12 px-6 rounded-[18px] text-sm whitespace-nowrap flex-shrink-0"
               >
                 {isLoading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    CHECK VIBE <ArrowRight className="w-6 h-6" />
+                    <span className="hidden md:inline">Check Vibe</span>
+                    <span className="md:hidden">Check</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
                   </>
                 )}
               </button>
             </div>
-
-            {error && (
-              <p className="text-red-600 font-bold uppercase tracking-tight text-center text-xs bg-white/50 py-2 border border-red-200">
-                {error}
-              </p>
-            )}
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    const response = await fetch('/api/generate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ username: 'demo', useMockData: true }),
-                    });
-                    const data = await response.json();
-                    sessionStorage.setItem('vibecheck_results', JSON.stringify(data.data));
-                    router.push('/results');
-                  } catch {
-                    setIsLoading(false);
-                  }
-                }}
-                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-pitch-black transition-colors underline underline-offset-4"
-                disabled={isLoading}
-              >
-                Or try with demo data
-              </button>
-            </div>
           </form>
-        </div>
-      </section>
 
-      {/* Abstract Decorations */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[10%] -left-12 w-48 h-48 border-[0.5px] border-pitch-black opacity-10 rounded-full" />
-        <div className="absolute bottom-[10%] -right-12 w-64 h-64 border-[0.5px] border-pitch-black opacity-10 rotate-12" />
+          {error && (
+            <div className="flex items-center justify-center gap-2 p-3 rounded-[20px] bg-red-50 border border-red-100 text-red-600 text-xs font-bold uppercase tracking-widest animate-in fade-in zoom-in duration-300">
+              <span className="w-1 h-1 rounded-full bg-red-600" />
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-center gap-4 pt-4">
+            <button
+              onClick={handleDemo}
+              disabled={isLoading}
+              className="text-xs font-semibold text-[#86868B] hover:text-[#007AFF] transition-colors cursor-pointer"
+            >
+              Or try with demo data
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Footer Info */}
+      <footer className="fixed bottom-8 text-center w-full px-6">
+        <p className="text-xs text-[#86868B] font-medium">Modern. Clean. Powered by GPT-4o.</p>
+      </footer>
     </div>
   );
 }

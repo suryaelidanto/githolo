@@ -1,135 +1,164 @@
 @import "tailwindcss";
 
-/* Design System Tokens
-   Using :root for maximum compatibility with IDEs and CSS parsers.
-   Tailwind v4 detects these variables automatically. */
+/* Bento Design System Tokens */
 :root {
-  --font-sans: var(--font-outfit), ui-sans-serif, system-ui;
-  --color-pitch-white: #f9f9f7;
-  --color-pitch-green: #d9e4dd;
-  --color-pitch-purple: #5f3cfe;
-  --color-pitch-black: #000000;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+
+  --color-bento-bg: #F5F5F7;
+  --color-bento-card: #FFFFFF;
+  --color-bento-primary: #1D1D1F;
+  --color-bento-secondary: #86868B;
+  --color-bento-accent: #007AFF;
+  --color-bento-border: #D2D2D7;
 }
 
 /* Base Styles */
 body {
-  background-color: var(--color-pitch-white);
-  color: var(--color-pitch-black);
+  background-color: var(--color-bento-bg);
+  color: var(--color-bento-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  margin: 0;
-  padding: 0;
 }
 
-/* Pitch.com Custom Components 
-   We use standard CSS properties here instead of @apply to avoid 
-   Turbopack/Tailwind v4 evaluation errors with complex values. */
-
-.pitch-headline {
-  /* Use clamp to ensure it's massive but doesn't break height on short screens */
-  font-size: clamp(3rem, 12vh, 8rem);
-  font-weight: 900;
-  line-height: 0.85;
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
+/* Bento Card Component */
+.bento-card {
+  background-color: var(--color-bento-card);
+  border: 1px solid var(--color-bento-border);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  position: relative;
 }
 
-@media (min-width: 768px) {
-  .pitch-headline {
-    font-size: clamp(4rem, 16vh, 10rem);
-  }
+.bento-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-.pitch-container {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-.pitch-button {
-  box-sizing: border-box;
-  height: 4rem;
-  padding-left: 2.5rem;
-  padding-right: 2.5rem;
-  background-color: var(--color-pitch-black);
-  border: 2px solid var(--color-pitch-black);
-  color: white;
+/* Typography Enhancements */
+.bento-heading {
   font-weight: 700;
-  font-size: 1.125rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.bento-body {
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-bento-secondary);
+}
+
+/* Pill Button */
+.bento-button {
+  height: 3.5rem;
+  padding: 0 2rem;
+  background-color: var(--color-bento-accent);
+  color: white;
+  border-radius: 100px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
 }
 
-.pitch-button:hover {
-  background-color: var(--color-pitch-purple);
-  transform: translateY(-2px);
+.bento-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
-.pitch-button:active {
-  transform: scale(0.95);
+.bento-button:active {
+  transform: scale(0.98);
 }
 
-.pitch-input {
-  box-sizing: border-box;
-  height: 4rem;
+.bento-button-secondary {
   background-color: white;
-  border: 2px solid var(--color-pitch-black);
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  font-size: 1.25rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--color-bento-primary);
+  border: 1px solid var(--color-bento-border);
+}
+
+/* Grid System */
+.bento-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+/* Custom Search Wrapper for Bento */
+.bento-search-wrapper {
+  background: white;
+  border: 1px solid var(--color-bento-border);
+  border-radius: 24px;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
-.pitch-input:focus {
+.bento-search-wrapper:focus-within {
+  border-color: var(--color-bento-accent);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1), 0 8px 20px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.bento-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
   outline: none;
+  padding: 0.75rem 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-bento-primary);
+  min-width: 0;
 }
 
-.pitch-input::placeholder {
-  color: #a1a1aa;
+.bento-search-input::placeholder {
+  color: var(--color-bento-secondary);
+  opacity: 0.5;
 }
 
-.pitch-card {
-  background-color: white;
-  border: 2px solid var(--color-pitch-black);
-  padding: 2rem;
-  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+/* Shimmer Effect */
+.shimmer {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.pitch-card:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: 12px 12px 0px 0px var(--color-pitch-purple);
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
-.pitch-code-block {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-/* Base interactive elements */
-button,
-a {
-  cursor: pointer;
-}
-
-.transition-smooth {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.pitch-line-art {
-  opacity: 0.1;
-  pointer-events: none;
+/* Code Block Variant */
+.bento-code-block {
+  background-color: #1D1D1F;
+  color: #F5F5F7;
+  padding: 1.5rem;
+  border-radius: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
 }

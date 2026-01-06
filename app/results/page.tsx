@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Github, Copy, Check, Share2, ArrowLeft } from 'lucide-react';
+import { Github, Copy, Check, ArrowLeft, Star, ExternalLink, Quote } from 'lucide-react';
 import Image from 'next/image';
 
 interface VibeData {
@@ -61,195 +61,214 @@ export default function Results() {
   if (!data) return null;
 
   return (
-    <div className="min-h-screen bg-pitch-white flex flex-col">
-      {/* Header */}
-      <header className="p-8 flex justify-between items-center border-b-4 border-pitch-black">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-8 animate-in fade-in duration-700">
+      {/* Top Nav */}
+      <nav className="max-w-7xl mx-auto flex justify-between items-center mb-8">
         <div
           onClick={() => router.push('/')}
-          className="flex items-center gap-2 font-black text-2xl uppercase tracking-tighter cursor-pointer hover:text-pitch-purple transition-colors"
+          className="flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer hover:opacity-70 transition-opacity"
         >
-          <Github className="w-6 h-6" />
-          Vibe Check
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-[#D2D2D7] shadow-sm">
+            <Github className="w-4 h-4" />
+          </div>
+          <span>Vibe Check</span>
         </div>
-        <button className="pitch-button h-12 px-6 flex items-center gap-2 text-xs">
-          <Share2 className="w-4 h-4" /> Share Results
+        <button
+          onClick={() => router.push('/')}
+          className="bento-button bento-button-secondary h-10 px-4 text-xs font-bold uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-3 h-3 mr-2" /> Check New
         </button>
-      </header>
+      </nav>
 
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left Sidebar: Profile & Vibe */}
-        <section className="md:w-1/3 p-8 border-b-4 md:border-b-0 md:border-r-4 border-pitch-black space-y-8 bg-white">
-          {/* Profile Card */}
-          <div className="flex items-center gap-4">
-            <Image
-              src={data.profile.avatar}
-              alt={data.profile.username || data.profile.name || 'User Avatar'}
-              width={80}
-              height={80}
-              className="rounded-full border-2 border-pitch-black"
-              unoptimized
-            />
-            <div>
-              <h2 className="text-2xl font-black uppercase tracking-tighter">
-                {data.profile.name}
-              </h2>
-              <p className="text-sm text-zinc-500">@{data.profile.username || 'unknown'}</p>
+      {/* Main Bento Grid */}
+      <main className="max-w-7xl mx-auto bento-grid">
+        {/* Profile Card */}
+        <section className="md:col-span-4 md:row-span-2 bento-card flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Image
+                src={data.profile.avatar}
+                alt={data.profile.username || 'Avatar'}
+                width={64}
+                height={64}
+                className="rounded-2xl border border-[#D2D2D7]"
+                unoptimized
+              />
+              <div>
+                <h3 className="bento-heading text-lg">{data.profile.name}</h3>
+                <p className="text-sm text-[#86868B]">@{data.profile.username}</p>
+              </div>
             </div>
-          </div>
-
-          {data.profile.bio && (
-            <p className="text-sm text-zinc-600 italic border-l-2 border-pitch-purple pl-3">
-              {data.profile.bio}
+            <p className="text-sm bento-body line-clamp-3">
+              {data.profile.bio || 'No bio provided.'}
             </p>
-          )}
-
-          {/* Stats */}
-          <div className="flex gap-6">
+          </div>
+          <div className="flex gap-6 pt-4 border-t border-[#F5F5F7]">
             <div>
-              <p className="text-2xl font-black">{data.profile.stats.repos}</p>
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Repos</p>
+              <p className="text-xl font-bold">{data.profile.stats.repos}</p>
+              <p className="text-[10px] uppercase font-bold text-[#86868B]">Repos</p>
             </div>
             <div>
-              <p className="text-2xl font-black">{data.profile.stats.followers}</p>
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Followers</p>
+              <p className="text-xl font-bold">{data.profile.stats.followers}</p>
+              <p className="text-[10px] uppercase font-bold text-[#86868B]">Followers</p>
             </div>
-          </div>
-
-          {/* Archetype */}
-          <div className="space-y-2 pt-8 border-t-2 border-pitch-black">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              Developer Archetype
-            </p>
-            <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-pitch-purple">
-              {data.vibe.archetype}
-            </h1>
-            <p className="text-lg font-medium leading-snug pt-2">{data.vibe.personality}</p>
-          </div>
-
-          {/* Strengths */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              Strengths
-            </p>
-            <div className="space-y-1">
-              {data.vibe.strengths.map((strength, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-pitch-purple rounded-full" />
-                  <p className="text-sm font-medium">{strength}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quirks */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Quirks</p>
-            <div className="space-y-1">
-              {data.vibe.quirks.map((quirk, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-pitch-black rounded-full" />
-                  <p className="text-sm font-medium italic">{quirk}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* The Roast */}
-          <div className="bg-pitch-green p-4 border-2 border-pitch-black">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-2">
-              The Roast
-            </p>
-            <p className="text-base font-bold leading-snug">
-              {'"'}
-              {data.vibe.roast}
-              {'"'}
-            </p>
           </div>
         </section>
 
-        {/* Right Content: Code Sample & Commits */}
-        <section className="flex-1 bg-pitch-green p-8 space-y-8">
-          <div className="flex justify-between items-end">
-            <h2 className="text-4xl font-black uppercase tracking-tighter leading-none">
-              Your Code
-              <br />
-              DNA
-            </h2>
-          </div>
+        {/* Archetype Card */}
+        <section className="md:col-span-8 md:row-span-2 bento-card bg-white flex flex-col justify-center">
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#86868B] mb-2 text-center md:text-left">
+            Developer Archetype
+          </p>
+          <h1 className="text-4xl md:text-7xl bento-heading text-center md:text-left text-[#007AFF] leading-none mb-4">
+            {data.vibe.archetype}
+          </h1>
+          <p className="text-lg md:text-xl font-medium text-[#1D1D1F] text-center md:text-left">
+            {data.vibe.personality}
+          </p>
+        </section>
 
-          {/* Code Sample */}
-          <div className="pitch-card">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                  Generated Code Sample
-                </p>
-                <p className="text-xs text-zinc-600 mt-1">Language: {data.codeSample.language}</p>
+        {/* The Roast Card */}
+        <section className="md:col-span-4 md:row-span-2 bento-card !bg-[#1D1D1F] !text-white border-none shadow-xl flex flex-col justify-center">
+          <Quote className="w-8 h-8 text-[#86868B] opacity-30 mb-4" />
+          <p className="text-lg md:text-xl font-medium italic leading-relaxed">
+            {'"'}
+            {data.vibe.roast}
+            {'"'}
+          </p>
+          <p className="mt-4 text-[10px] uppercase font-bold tracking-widest text-[#86868B]">
+            The Verdict
+          </p>
+        </section>
+
+        {/* Strengths Card */}
+        <section className="md:col-span-4 md:row-span-2 bento-card">
+          <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-4">
+            Strengths
+          </h4>
+          <div className="space-y-3">
+            {data.vibe.strengths.map((s, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF]" />
+                <p className="text-sm font-semibold">{s}</p>
               </div>
-              <button
-                onClick={() => handleCopy(data.codeSample.code, 'code')}
-                className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-pitch-purple transition-colors"
-              >
-                {copiedItem === 'code' ? (
-                  <>
-                    <Check className="w-3 h-3" /> Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3 h-3" /> Copy
-                  </>
-                )}
-              </button>
-            </div>
-            <pre className="bg-[#000000] text-white p-6 rounded-lg text-xs overflow-x-auto font-mono leading-relaxed min-h-[120px] shadow-2xl border border-white/10">
-              <code>{data.codeSample.code}</code>
-            </pre>
-            <div className="mt-3 pt-3 border-t border-zinc-200">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">
-                Commit Message
-              </p>
-              <p className="text-sm font-medium italic">
-                {'"'}
-                {data.codeSample.commitMessage}
-                {'"'}
-              </p>
-            </div>
+            ))}
           </div>
+        </section>
 
-          {/* Commit Style */}
-          <div className="pitch-card">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">
-              Commit Style Analysis
-            </p>
-            <p className="text-lg font-medium leading-snug">{data.vibe.commitStyle}</p>
+        {/* Quirks Card */}
+        <section className="md:col-span-4 md:row-span-2 bento-card">
+          <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-4">
+            Quirks
+          </h4>
+          <div className="space-y-3">
+            {data.vibe.quirks.map((q, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1D1D1F]" />
+                <p className="text-sm font-medium italic text-[#86868B]">{q}</p>
+              </div>
+            ))}
           </div>
+        </section>
 
-          {/* Sample Commits */}
-          <div className="pitch-card">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-4">
-              Recent Commits
-            </p>
-            <div className="space-y-3">
-              {data.sampleCommits.map((commit, idx) => (
-                <div key={idx} className="border-l-2 border-pitch-purple pl-3">
-                  <p className="text-sm font-medium">{commit.message}</p>
-                  <p className="text-xs text-zinc-500 mt-1">{commit.repo}</p>
-                </div>
-              ))}
+        {/* Code DNA Card */}
+        <section className="md:col-span-8 md:row-span-4 bento-card">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B]">
+                Code DNA
+              </h4>
+              <p className="text-xs text-[#86868B] mt-0.5">{data.codeSample.language}</p>
             </div>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center pt-8">
             <button
-              onClick={() => router.push('/')}
-              className="pitch-button inline-flex items-center gap-2"
+              onClick={() => handleCopy(data.codeSample.code, 'code')}
+              className="text-[10px] font-bold uppercase flex items-center gap-1.5 text-[#007AFF] hover:opacity-70 transition-opacity"
             >
-              <ArrowLeft className="w-5 h-5" /> Check Another Developer
+              {copiedItem === 'code' ? (
+                <>
+                  <Check className="w-3 h-3" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" /> Copy Snippet
+                </>
+              )}
             </button>
           </div>
+          <pre className="bento-code-block min-h-[200px] text-xs">
+            <code>{data.codeSample.code}</code>
+          </pre>
+          <div className="mt-4 pt-4 border-t border-[#F5F5F7]">
+            <p className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-2">
+              Commit Style
+            </p>
+            <p className="text-sm font-medium italic text-[#1D1D1F]">
+              {'"'}
+              {data.codeSample.commitMessage}
+              {'"'}
+            </p>
+          </div>
         </section>
-      </div>
+
+        {/* Commit Style Analysis */}
+        <section className="md:col-span-4 md:row-span-2 bento-card bg-[#F5F5F7] border-none">
+          <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-3">
+            Communication
+          </h4>
+          <p className="text-sm md:text-base font-medium leading-relaxed">
+            {data.vibe.commitStyle}
+          </p>
+        </section>
+
+        {/* Recent Activity Card */}
+        <section className="md:col-span-4 md:row-span-2 bento-card overflow-hidden">
+          <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-4">
+            Recent Actvity
+          </h4>
+          <div className="space-y-4">
+            {data.sampleCommits.slice(0, 3).map((c, i) => (
+              <div key={i} className="space-y-1">
+                <p className="text-xs font-semibold line-clamp-1">{c.message}</p>
+                <div className="text-[10px] text-[#86868B] flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-[#D2D2D7]" /> {c.repo.split('/')[1]}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA Section - Full Width at Bottom */}
+        <section className="md:col-span-12 mt-4 flex flex-col md:flex-row gap-4 items-center justify-center p-8 bg-white rounded-[32px] border border-[#D2D2D7] shadow-sm">
+          <div className="text-center md:text-left md:mr-auto">
+            <h3 className="bento-heading text-lg">Like the vibe?</h3>
+            <p className="text-sm bento-body">Support the developer or this project on GitHub.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href={`https://github.com/${data.profile.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bento-button h-12"
+            >
+              Follow @{data.profile.username} <ExternalLink className="w-4 h-4 ml-2" />
+            </a>
+            <a
+              href="https://github.com/suryaelidanto/github-vibecheck"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bento-button bento-button-secondary h-12"
+            >
+              Star this Project <Star className="w-4 h-4 ml-2 fill-[#007AFF] text-[#007AFF]" />
+            </a>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="max-w-7xl mx-auto mt-12 mb-8 text-center text-[#86868B] text-xs font-medium">
+        <p>© 2026 GitHub Vibe Check. Made with ❤️ for the dev community.</p>
+      </footer>
     </div>
   );
 }
