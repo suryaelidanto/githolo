@@ -31,6 +31,7 @@ export interface RepoDetail {
   languages: string[];
   topics: string[];
   structure: string[]; // Root-level folders/files
+  dependencies: string; // Raw text from package.json, go.mod, etc.
 }
 
 export interface ScrapeResult {
@@ -212,12 +213,31 @@ async function fetchRepoDetails(username: string, limit: number = 3): Promise<Re
         f.type === 'dir' ? `/${f.name}` : f.name
       ); // Full root tree
 
+      // 3. Fetch Dependency Signal (Hard Signal)
+      let dependencies = '';
+      const depFiles = ['package.json', 'go.mod', 'requirements.txt', 'Gemfile', 'Cargo.toml'];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const foundDep = contentResp.data.find((f: any) => depFiles.includes(f.name));
+
+      if (foundDep) {
+        try {
+          const depResp = await axios.get(foundDep.download_url, { headers });
+          dependencies =
+            typeof depResp.data === 'string'
+              ? depResp.data.substring(0, 1500)
+              : JSON.stringify(depResp.data).substring(0, 1500);
+        } catch {
+          // Ignore dep fetch errors
+        }
+      }
+
       details.push({
         name: repo.name,
         description: repo.description || '',
         languages,
         topics: repo.topics || [],
         structure,
+        dependencies,
       });
     } catch {
       continue;
@@ -340,6 +360,8 @@ export function getMockGitHubData(): ScrapeResult {
         languages: ['TypeScript', 'CSS'],
         topics: ['ai', 'nextjs'],
         structure: ['/app', '/components', '/lib', 'package.json', 'README.md'],
+        dependencies:
+          '"dependencies": { "next": "latest", "react": "latest", "lucide-react": "latest" }',
       },
     ],
   };

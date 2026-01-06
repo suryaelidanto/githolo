@@ -20,8 +20,13 @@ interface VibeData {
   vibe: {
     archetype: string;
     personality: string;
-    strengths: string[];
-    quirks: string[];
+    audit: {
+      testing: string;
+      tooling: string;
+      architecture: string;
+    };
+    marketRole: string;
+    growthAdvice: string[];
     roast: string;
     commitStyle: string;
   };
@@ -124,9 +129,15 @@ export default function Results() {
           <h1 className="text-4xl md:text-7xl bento-heading text-center md:text-left text-[#007AFF] leading-none mb-4">
             {data.vibe.archetype}
           </h1>
-          <p className="text-lg md:text-xl font-medium text-[#1D1D1F] text-center md:text-left">
-            {data.vibe.personality}
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+            <p className="text-lg md:text-xl font-medium text-[#1D1D1F] text-center md:text-left">
+              {data.vibe.personality}
+            </p>
+            <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-[#D2D2D7]" />
+            <p className="text-sm font-bold uppercase tracking-widest text-[#007AFF] text-center md:text-left">
+              {data.vibe.marketRole}
+            </p>
+          </div>
         </section>
 
         {/* The Roast Card */}
@@ -142,31 +153,37 @@ export default function Results() {
           </p>
         </section>
 
-        {/* Strengths Card */}
+        {/* Engineering Audit Card */}
         <section className="md:col-span-4 md:row-span-2 bento-card">
           <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-4">
-            Strengths
+            Engineering Audit
           </h4>
-          <div className="space-y-3">
-            {data.vibe.strengths.map((s, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF]" />
-                <p className="text-sm font-semibold">{s}</p>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <div>
+              <p className="text-[10px] font-bold text-[#007AFF] uppercase mb-1">Testing Culture</p>
+              <p className="text-sm font-medium leading-tight">{data.vibe.audit.testing}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-[#007AFF] uppercase mb-1">Ops & Tooling</p>
+              <p className="text-sm font-medium leading-tight">{data.vibe.audit.tooling}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-[#007AFF] uppercase mb-1">Architecture</p>
+              <p className="text-sm font-medium leading-tight">{data.vibe.audit.architecture}</p>
+            </div>
           </div>
         </section>
 
-        {/* Quirks Card */}
+        {/* Growth Advice Card */}
         <section className="md:col-span-4 md:row-span-2 bento-card">
           <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#86868B] mb-4">
-            Quirks
+            Growth Advice
           </h4>
           <div className="space-y-3">
-            {data.vibe.quirks.map((q, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#1D1D1F]" />
-                <p className="text-sm font-medium italic text-[#86868B]">{q}</p>
+            {data.vibe.growthAdvice.map((advice, i) => (
+              <div key={i} className="flex gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF] mt-1.5 shrink-0" />
+                <p className="text-sm font-medium leading-snug">{advice}</p>
               </div>
             ))}
           </div>

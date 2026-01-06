@@ -37,44 +37,55 @@ function getLLM() {
 }
 
 export interface DeveloperVibe {
-  archetype: string; // "The Chaotic Refactorer", "The Documentation Monk", etc.
-  personality: string; // Short description
-  strengths: string[];
-  quirks: string[];
-  roast: string; // Funny but accurate roast
+  archetype: string;
+  personality: string;
+  audit: {
+    testing: string; // Analysis of testing culture
+    tooling: string; // CI/CD, Docker, etc.
+    architecture: string; // Patterns found
+  };
+  marketRole: string; // Founder-stage, Enterprise Architect, etc.
+  growthAdvice: string[]; // Actionable technical tips
+  roast: string;
   commitStyle: string;
 }
 
-const VIBE_ANALYZER_PROMPT = `You are a witty developer psychologist. Analyze this GitHub user's coding personality.
+const VIBE_ANALYZER_PROMPT = `You are a Senior System Architect performing a technical audit of a developer's GitHub profile. 
+Your goal is to provide a "Signal-Heavy" analysis that actually matters to a Lead Engineer or a CTO.
 
-TECHNICAL CONTEXT (TOP REPOS):
+CONTEXT:
+TOP REPOS (Structure, Topics & Hard Signals from Dependencies):
 {repoContext}
 
-COMMIT MESSAGES:
+LATEST COMMITS:
 {commits}
 
 README SAMPLES:
 {readmes}
 
 PROFILE STATS:
-- Public Repos: {repos}
-- Followers: {followers}
+- Repos: {repos}, Followers: {followers}
 
-Analyze and return a JSON object with the following structure (ONLY return valid JSON, no markdown, no explanation):
+Analyze and return a JSON object with this structure (ONLY return valid JSON):
 {{
-  "archetype": "A creative 2-4 word title like 'The Chaotic Refactorer' or 'The Documentation Monk'",
-  "personality": "A punchy 1-2 sentence description of their coding personality",
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "quirks": ["quirk 1", "quirk 2"],
-  "roast": "A funny but accurate one-liner roast about their coding habits (keep it playful, not mean)",
-  "commitStyle": "Description of their commit message style in 1 sentence"
+  "archetype": "A technical title (e.g., 'Protobuf Purist', 'The Boilerplate Architect', 'Async/Await Maverick')",
+  "personality": "Punchy analysis of their engineering philosophy.",
+  "audit": {{
+    "testing": "Evidence-based analysis of their testing culture (found tests folders? used vitest/jest/playwright? or raw dogging production?)",
+    "tooling": "Analysis of DX/Ops maturity (Docker, CI/CD, Monorepos, Task runners like Just/Makefile)",
+    "architecture": "Identified patterns (Clean Architecture, Script-first, Event-driven, etc.) based on folder structures"
+  }},
+  "marketRole": "A role designation like 'Early-Stage Growth Engineer', 'System Stability Specialist', or 'Prototype Specialist'",
+  "growthAdvice": ["Advice 1: focusing on specific tech they lack based on their stack", "Advice 2..."],
+  "roast": "A high-tier technical roast (e.g., roasting their dependency-bloat, or their lack of tests, or their 2000-line index.js)",
+  "commitStyle": "Diagnosis of their git discipline"
 }}
 
-Instruction for analysis:
-- Analyze the Technical Skeleton (Repo Structure): Look for professional patterns like containerization (Docker), strict linting (.eslintrc), automated pipelines (.github), or complex monorepo setups. If you see messy root directories with log files or temp files, call it out.
-- Synthesize Stack + Niche: Use Languages & Topics to determine if they are deep-tech specialists (LLMs, Compilers) or product-focused (Web, Mobile).
-- Connect the Dots with Commits: Do their professional-looking folders match their commit energy? Or is it "organized chaos"?
-- Make it entertaining, accurate, and shareable. Tone: Witty, slightly judgmental (it's a "roast" partly), but technically sophisticated.`;
+Instruction:
+- IGNORE FLUFF. Look at the dependencies! If you see 'pnpm', they care about efficiency. If you see 'lodash' everywhere, call it out.
+- Be surprisingly observant. If their repo structure is identical to a famous boiler-plate, call them a 'Scaffold Specialist'.
+- If the commits are mostly 'chore: update', they are likely a maintenance-heavy coder.
+- Return a signal that would make a developer say 'Wait, how did it know that?'`;
 
 export async function analyzeGitHubVibe(
   commits: string[],
@@ -92,7 +103,7 @@ export async function analyzeGitHubVibe(
   const repoContextText = repoDetails
     .map(
       (r) =>
-        `Repo: ${r.name}\n- Desc: ${r.description}\n- Tech: ${r.languages.join(', ')}\n- Topics: ${r.topics.join(', ')}\n- Files: ${r.structure.join(', ')}`
+        `Repo: ${r.name}\n- Desc: ${r.description}\n- Tech: ${r.languages.join(', ')}\n- Topics: ${r.topics.join(', ')}\n- Files: ${r.structure.join(', ')}\n- Dep Signal: ${r.dependencies || 'none'}`
     )
     .join('\n\n');
 
@@ -122,13 +133,22 @@ export async function analyzeGitHubVibe(
 
     // Fallback vibe
     return {
-      archetype: 'The Mysterious Coder',
-      personality:
-        'A developer shrouded in mystery, leaving breadcrumbs of brilliance across the codebase.',
-      strengths: ['Problem solving', 'Persistence', 'Adaptability'],
-      quirks: ['Commits at 3 AM', 'Loves refactoring'],
-      roast: 'Your commit messages are like fortune cookies—vague but oddly inspiring.',
-      commitStyle: 'Concise and to the point, like a developer haiku.',
+      archetype: 'The Mysterious Engineer',
+      personality: 'A developer who lets the code speak for itself, often in riddles.',
+      audit: {
+        testing: 'Inconclusive. Likely relying on manual verification.',
+        tooling: 'Standard Git workflow.',
+        architecture: 'Script-based or monolithic patterns.',
+      },
+      marketRole: 'Generalist Software Engineer',
+      growthAdvice: [
+        'Implement automated CI/CD pipelines',
+        'Add comprehensive unit testing',
+        'Explore modern dependency management',
+      ],
+      roast:
+        "Your presence on GitHub is like a private repo: we're sure something's there, but we can't see it.",
+      commitStyle: 'Minimalist and enigmatic.',
     };
   }
 }
@@ -139,10 +159,11 @@ export async function analyzeGitHubVibe(
  */
 const CODE_GENERATOR_PROMPT = `You are a code generator that mimics a developer's style.
 
-Based on this developer's vibe:
+Based on this developer's engineering audit:
 - Archetype: {archetype}
+- Market Role: {marketRole}
+- Architecture: {architecture}
 - Commit Style: {commitStyle}
-- Quirks: {quirks}
 
 Generate a short, funny code snippet (10-15 lines) that this developer would write.
 Include a commit message they would use for this code.
@@ -166,8 +187,9 @@ export async function generateCodeSample(vibe: DeveloperVibe): Promise<{
   try {
     const result = await chain.invoke({
       archetype: vibe.archetype,
+      marketRole: vibe.marketRole,
+      architecture: vibe.audit.architecture,
       commitStyle: vibe.commitStyle,
-      quirks: vibe.quirks.join(', '),
     });
 
     const cleanedResult = result
