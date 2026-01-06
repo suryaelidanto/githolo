@@ -1,160 +1,130 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-}
-
+/* Design System Tokens
+   Using :root for maximum compatibility with IDEs and CSS parsers.
+   Tailwind v4 detects these variables automatically. */
 :root {
-  --radius: 0.75rem;
-  
-  /* Dark mode by default - Silicon Valley aesthetic */
-  --background: 8 8 12;
-  --foreground: 250 250 250;
-  --card: 15 15 20;
-  --card-foreground: 250 250 250;
-  --primary: 139 92 246; /* Purple accent */
-  --primary-foreground: 255 255 255;
-  --secondary: 30 30 40;
-  --secondary-foreground: 250 250 250;
-  --muted: 30 30 40;
-  --muted-foreground: 161 161 170;
-  --accent: 139 92 246;
-  --accent-foreground: 255 255 255;
-  --destructive: 239 68 68;
-  --border: 39 39 42;
-  --input: 39 39 42;
-  --ring: 139 92 246;
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui;
+  --color-pitch-white: #f9f9f7;
+  --color-pitch-green: #d9e4dd;
+  --color-pitch-purple: #5f3cfe;
+  --color-pitch-black: #000000;
 }
 
-@layer base {
-  * {
-    @apply border-border;
+/* Base Styles */
+body {
+  background-color: var(--color-pitch-white);
+  color: var(--color-pitch-black);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* Pitch.com Custom Components 
+   We use standard CSS properties here instead of @apply to avoid 
+   Turbopack/Tailwind v4 evaluation errors with complex values. */
+
+.pitch-headline {
+  /* Use clamp to ensure it's massive but doesn't break height on short screens */
+  font-size: clamp(3rem, 12vh, 8rem);
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .pitch-headline {
+    font-size: clamp(4rem, 16vh, 10rem);
   }
-  
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  /* Gradient background for landing page */
-  .gradient-bg {
-    background: linear-gradient(
-      135deg,
-      rgb(8, 8, 12) 0%,
-      rgb(15, 15, 25) 50%,
-      rgb(20, 15, 30) 100%
-    );
-    position: relative;
-  }
-  
-  /* Animated gradient orbs */
-  .gradient-bg::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(
-      circle at 30% 50%,
-      rgba(139, 92, 246, 0.15) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 70% 50%,
-      rgba(59, 130, 246, 0.1) 0%,
-      transparent 50%
-    );
-    animation: rotate 20s linear infinite;
-    pointer-events: none;
-  }
-  
-  @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
-  /* Glass morphism effect for cards */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  /* Smooth transitions */
-  .transition-smooth {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Glow effect on hover */
-  .glow-on-hover {
-    position: relative;
-    transition: all 0.3s ease;
-  }
-  
-  .glow-on-hover::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: linear-gradient(45deg, rgb(139, 92, 246), rgb(59, 130, 246));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-    filter: blur(8px);
-  }
-  
-  .glow-on-hover:hover::before {
-    opacity: 0.7;
-  }
-  
-  /* Shimmer effect for loading states */
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-  
-  .shimmer {
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    background-size: 1000px 100%;
-  }
+}
+
+.pitch-container {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.pitch-button {
+  box-sizing: border-box;
+  height: 4rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+  background-color: var(--color-pitch-black);
+  border: 2px solid var(--color-pitch-black);
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pitch-button:hover {
+  background-color: var(--color-pitch-purple);
+  transform: translateY(-2px);
+}
+
+.pitch-button:active {
+  transform: scale(0.95);
+}
+
+.pitch-input {
+  box-sizing: border-box;
+  height: 4rem;
+  background-color: white;
+  border: 2px solid var(--color-pitch-black);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+}
+
+.pitch-input:focus {
+  outline: none;
+}
+
+.pitch-input::placeholder {
+  color: #a1a1aa;
+}
+
+.pitch-card {
+  background-color: white;
+  border: 2px solid var(--color-pitch-black);
+  padding: 2rem;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pitch-card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0px 0px var(--color-pitch-purple);
+}
+
+/* Base interactive elements */
+button,
+a {
+  cursor: pointer;
+}
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pitch-line-art {
+  opacity: 0.1;
+  pointer-events: none;
 }

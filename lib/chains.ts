@@ -27,9 +27,9 @@ function getLLM() {
   }
 
   return new ChatOpenAI({
-    modelName: 'google/gemini-flash-1.5', // Fast and cheap for MVP
+    modelName: 'openai/gpt-4o-mini', // Extremely fast, cheap, and smart for style analysis
     temperature: 0.7, // Balance between creativity and consistency
-    openAIApiKey: apiKey,
+    apiKey: apiKey,
     configuration: {
       baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: {
