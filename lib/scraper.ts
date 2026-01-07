@@ -25,6 +25,16 @@ export interface GitHubCommit {
   repo: string;
 }
 
+export interface RepoSummary {
+  name: string;
+  full_name: string;
+  description: string;
+  stars: number;
+  fork: boolean;
+  languages: string[];
+  updated_at: string;
+}
+
 export interface RepoDetail {
   name: string;
   description: string;
@@ -39,7 +49,8 @@ export interface ScrapeResult {
   profile?: GitHubProfile;
   commits?: GitHubCommit[];
   readmes?: string[];
-  repoDetails?: RepoDetail[]; // Deep technical context
+  repos?: RepoSummary[]; // Broad list of 15-20 repos
+  repoDetails?: RepoDetail[]; // Technical context for top repos
   error?: string;
   isMock?: boolean;
 }
@@ -51,7 +62,7 @@ async function fetchGitHubProfile(username: string): Promise<GitHubProfile> {
   const token = process.env.GITHUB_TOKEN; // Optional, increases rate limit
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'GitHubVibeCheck',
+    'User-Agent': 'GitHolo',
   };
 
   if (token) {
@@ -80,7 +91,7 @@ async function fetchRecentCommits(username: string, limit: number = 20): Promise
   const token = process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'GitHubVibeCheck',
+    'User-Agent': 'GitHolo',
   };
 
   if (token) {
@@ -135,7 +146,7 @@ async function fetchTopReadmes(username: string, limit: number = 3): Promise<str
   const token = process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'GitHubVibeCheck',
+    'User-Agent': 'GitHolo',
   };
 
   if (token) {
@@ -177,13 +188,111 @@ async function fetchTopReadmes(username: string, limit: number = 3): Promise<str
 }
 
 /**
+ * Fetch a broad list of repositories for the persona analysis
+ */
+async function fetchBroadRepoList(username: string, limit: number = 15): Promise<RepoSummary[]> {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHolo',
+  };
+
+  if (token) {
+    headers['Authorization'] = `token ${token}`;
+  }
+
+  const response = await axios.get(
+    `https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`,
+    { headers }
+  );
+
+  return response.data.map(
+    (r: {
+      name: string;
+      full_name: string;
+      description: string | null;
+      stargazers_count: number;
+      fork: boolean;
+      updated_at: string;
+    }) => ({
+      name: r.name,
+      full_name: r.full_name,
+      description: r.description || '',
+      stars: r.stargazers_count,
+      fork: r.fork,
+      languages: [], // Metadata is usually enough
+      updated_at: r.updated_at,
+    })
+  );
+}
+
+/**
+ * Fetch Recursive Tree for a specific repo
+ */
+export async function fetchRecursiveTree(fullName: string): Promise<string[]> {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHolo',
+  };
+
+  if (token) headers['Authorization'] = `token ${token}`;
+
+  try {
+    const response = await axios.get(
+      `https://api.github.com/repos/${fullName}/git/trees/main?recursive=1`,
+      { headers }
+    );
+    return response.data.tree
+      .filter((node: { type: string }) => node.type === 'blob')
+      .map((node: { path: string }) => node.path);
+  } catch {
+    try {
+      const response = await axios.get(
+        `https://api.github.com/repos/${fullName}/git/trees/master?recursive=1`,
+        { headers }
+      );
+      return response.data.tree
+        .filter((node: { type: string }) => node.type === 'blob')
+        .map((node: { path: string }) => node.path);
+    } catch {
+      return [];
+    }
+  }
+}
+
+/**
+ * Fetch Raw File Content
+ */
+export async function fetchRawFileContent(fullName: string, path: string): Promise<string> {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3.raw',
+    'User-Agent': 'GitHolo',
+  };
+
+  if (token) headers['Authorization'] = `token ${token}`;
+
+  try {
+    const response = await axios.get(`https://api.github.com/repos/${fullName}/contents/${path}`, {
+      headers,
+    });
+    return typeof response.data === 'string'
+      ? response.data.substring(0, 3000)
+      : JSON.stringify(response.data).substring(0, 3000);
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Fetch technical details for top repos
  */
 async function fetchRepoDetails(username: string, limit: number = 3): Promise<RepoDetail[]> {
   const token = process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'GitHubVibeCheck',
+    'User-Agent': 'GitHolo',
   };
 
   if (token) {
@@ -216,8 +325,9 @@ async function fetchRepoDetails(username: string, limit: number = 3): Promise<Re
       // 3. Fetch Dependency Signal (Hard Signal)
       let dependencies = '';
       const depFiles = ['package.json', 'go.mod', 'requirements.txt', 'Gemfile', 'Cargo.toml'];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const foundDep = contentResp.data.find((f: any) => depFiles.includes(f.name));
+      const foundDep = contentResp.data.find((f: { name: string; download_url: string }) =>
+        depFiles.includes(f.name)
+      );
 
       if (foundDep) {
         try {
@@ -263,9 +373,10 @@ export async function scrapeGitHubProfile(username: string): Promise<ScrapeResul
     const profile = await fetchGitHubProfile(username);
 
     // Run secondary fetches in parallel
-    const [commits, readmes, repoDetails] = await Promise.all([
+    const [commits, readmes, repos, repoDetails] = await Promise.all([
       fetchRecentCommits(username, 20).catch(() => []),
       fetchTopReadmes(username, 3).catch(() => []),
+      fetchBroadRepoList(username, 15).catch(() => []),
       fetchRepoDetails(username, 3).catch(() => []),
     ]);
 
@@ -281,6 +392,7 @@ export async function scrapeGitHubProfile(username: string): Promise<ScrapeResul
       profile,
       commits,
       readmes,
+      repos,
       repoDetails,
     };
   } catch (error: unknown) {

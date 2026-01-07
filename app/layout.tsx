@@ -9,9 +9,9 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: 'GitHub Vibe Check - Discover Your Developer Personality',
+  title: 'GitHolo - Discover Your Developer Identity',
   description:
-    'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype, strengths, quirks, and a personalized roast.',
+    'AI analyzes your GitHub commits and reveals your coding identity. Get your unique developer archetype and holographic identity card.',
   keywords: [
     'GitHub',
     'developer personality',
@@ -20,27 +20,27 @@ export const metadata: Metadata = {
     'commit messages',
     'developer archetype',
   ],
-  authors: [{ name: 'GitHub Vibe Check' }],
+  authors: [{ name: 'GitHolo' }],
   openGraph: {
-    title: 'GitHub Vibe Check - Discover Your Developer Personality',
+    title: 'GitHolo - Discover Your Developer Identity',
     description:
-      'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype and personalized insights.',
+      'AI analyzes your GitHub commits and reveals your coding identity. Get your unique developer archetype and holographic identity card.',
     type: 'website',
-    url: 'https://github-vibe-check.vercel.app',
+    url: 'https://githolo.vercel.app',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'GitHub Vibe Check - AI-powered developer personality analysis',
+        alt: 'GitHolo - AI-powered developer identity analysis',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GitHub Vibe Check - Discover Your Developer Personality',
+    title: 'GitHolo - Discover Your Developer Identity',
     description:
-      'AI analyzes your GitHub commits and reveals your coding personality. Get your developer archetype and personalized insights.',
+      'AI analyzes your GitHub commits and reveals your coding identity. Get your unique developer archetype and holographic identity card.',
     images: ['/og-image.png'],
   },
   robots: {

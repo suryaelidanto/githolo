@@ -1,4 +1,4 @@
-# GitHub Vibe Check
+# GitHolo
 
 AI-powered developer personality analysis. Discover your coding archetype based on your GitHub commits.
 

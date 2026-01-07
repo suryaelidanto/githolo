@@ -1,12 +1,12 @@
 {
-  "name": "github-vibe-check",
+  "name": "githolo",
   "version": "1.0.0",
   "description": "AI-powered developer personality analysis. Discover your coding archetype based on your GitHub commits.",
-  "author": "GitHub Vibe Check",
+  "author": "GitHolo",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/github-vibe-check.git"
+    "url": "https://github.com/suryaelidanto/githolo.git"
   },
   "keywords": [
     "github",

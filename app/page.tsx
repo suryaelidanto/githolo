@@ -57,7 +57,7 @@ export default function Home() {
         return;
       }
 
-      sessionStorage.setItem('vibecheck_results', JSON.stringify(data.data));
+      sessionStorage.setItem('githolo_results', JSON.stringify(data.data));
       router.push('/results');
     } catch {
       setError('Connection failed. Please check your internet.');
@@ -74,7 +74,7 @@ export default function Home() {
         body: JSON.stringify({ username: 'demo', useMockData: true }),
       });
       const data = await response.json();
-      sessionStorage.setItem('vibecheck_results', JSON.stringify(data.data));
+      sessionStorage.setItem('githolo_results', JSON.stringify(data.data));
       router.push('/results');
     } catch {
       setIsLoading(false);
@@ -89,16 +89,14 @@ export default function Home() {
           <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-[#D2D2D7]">
             <Github className="w-8 h-8 text-[#1D1D1F]" />
           </div>
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#86868B]">
-            GitHub Vibe Check
-          </h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#86868B]">GitHolo</h2>
         </div>
 
         {/* Hero Section */}
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#1D1D1F] leading-[1.1]">
-            Discover your <br />
-            <span className="text-[#007AFF]">developer vibe</span>
+            Experience your <br />
+            <span className="text-[#007AFF]">holographic identity</span>
           </h1>
           <p className="text-lg md:text-xl text-[#86868B] max-w-lg mx-auto leading-relaxed bento-body">
             AI analysis of your coding personality and commit habits. Get your archetype, strengths,
@@ -130,8 +128,8 @@ export default function Home() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <span className="hidden md:inline">Check Vibe</span>
-                    <span className="md:hidden">Check</span>
+                    <span className="hidden md:inline">Generate Identity</span>
+                    <span className="md:hidden">Generate</span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </>
                 )}

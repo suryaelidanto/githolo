@@ -49,7 +49,7 @@ function getRateLimiter() {
     redis,
     limiter: Ratelimit.slidingWindow(3, '24 h'), // 3 requests per 24 hours
     analytics: true, // Track usage for insights
-    prefix: 'vibecheck:ratelimit', // Namespace for this app
+    prefix: 'githolo:ratelimit', // Namespace for this app
   });
 }
 
